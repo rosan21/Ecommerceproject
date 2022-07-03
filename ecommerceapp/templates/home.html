@@ -1,0 +1,31 @@
+{%extends 'core/base.html'%}
+{%load custom_price_tag%}
+
+{% block title %}{% endblock %}
+
+{%block content%} 
+
+
+    <div class="container-fluid ">
+        <h1 class="text-center display-4">Welcome to our ecommerce website. </h1>
+        <hr>
+        <div class="row mt-3 mx-auto">
+            {% for p in products %}
+            
+            <div class="card col-md-3 mt-1 " style="width: 18rem;">
+                <img src='{{p.image.url}}' class="card-img-top" alt="" class="img-fluid" style="height: 200px; object-fit: contain;">
+                <div class="card-body">
+                    <h5 class="card-title"><a style="color:rgb(124, 165, 152) ;" href="{%url 'productdetail' slug=p.slug%}">{{p.title}}</a></h5>
+                    <p class="card-text">
+                        Price: <strike>{{p.marked_price | rupees}}</strike> {{p.selling_price | rupees}}                   
+                    </p>
+                    <a href="{%url 'addtocart' id=p.id%}" class="btn btn-info">Add To Cart</a>
+                </div>
+
+               
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{%endblock content%}

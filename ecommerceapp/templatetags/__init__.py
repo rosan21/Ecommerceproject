@@ -1,0 +1,1 @@
+from ecommerceapp.templatetags import custom_price_tag
