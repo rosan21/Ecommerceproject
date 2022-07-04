@@ -1,0 +1,48 @@
+{%extends 'core/base.html'%}
+{%load custom_price_tag%}
+{%block title%}
+{%endblock title%}
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h4 class="display-4">Items in my cart</h4><hr>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>SN</td>
+                        <td>Product</td>
+                        <td>Rate</td>
+                        <td>Quantity</td>
+                        <td>Subtotal</td>
+                        <td>Action</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for c in cart.cartproduct_set.all%}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{c.product.title}}</td>
+                        <td>{{c.rate}}</td>
+                        <td>{{c.quantity}}</td>
+                        <td>{{c.subtotal}}</td>
+                        
+                        <td>
+                            <a href="" class="btn btn-primary">+</a>
+                            <a href="" class="btn btn-warning">-</a>
+                            <a href="" class="btn btn-danger">x</a>
+                        </td>
+                    </tr>
+                    {%endfor%}
+                    <tr>
+                        <td colspan="4" class="text-right">Total</td>
+                        <td>{{cart.total|rupees}}</td>
+                    </tr>
+                </tbody>
+                
+               
+            </table>
+        </div>
+    </div>
+</div>
+{%endblock content%}

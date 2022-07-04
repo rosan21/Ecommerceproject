@@ -68,8 +68,20 @@ class AddToCartView(TemplateView):
             cart_object.total += product_object.selling_price
             cart_object.save()
 
+        return context
 
+class MyCartView(TemplateView):
+    template_name ='mycart.html'
 
+    def get_context_data(self, **kwargs):
+        context =  super().get_context_data(**kwargs)
+        cart_id = self.request.session.get('cart_id', None)
+        
+        if cart_id:
+            cart_object = Cart.objects.get(id=cart_id)
+        else:
+            cart_object =None
+        context['cart']=cart_object
 
 
         return context
