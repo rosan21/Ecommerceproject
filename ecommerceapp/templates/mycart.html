@@ -28,16 +28,21 @@
                         <td>{{c.subtotal}}</td>
                         
                         <td>
-                            <a href="" class="btn btn-primary">+</a>
-                            <a href="" class="btn btn-warning">-</a>
-                            <a href="" class="btn btn-danger">x</a>
+                            <a href="{% url 'managecart' id=c.id%}?action=inc" class="btn btn-primary">+</a>
+                            <a href="{% url 'managecart' id=c.id%}?action=dec" class="btn btn-warning">-</a>
+                            <a href="{% url 'managecart' id=c.id%}?action=rmv" class="btn btn-danger">x</a>
                         </td>
                     </tr>
                     {%endfor%}
                     <tr>
-                        <td colspan="4" class="text-right">Total</td>
-                        <td>{{cart.total|rupees}}</td>
+                        <th colspan="1"><a href="{%url 'checkout'%}" class="btn btn-success">Checkout</a></th>
+                        <th colspan="3" class="text-right">Total</th>
+                        <th>{{cart.total|rupees}}</th>
+                        <th><a href="{%url 'emptycart'%}" class="btn btn-info">Empty Cart</a></th>
+                        
                     </tr>
+                   
+                    
                 </tbody>
                 
                

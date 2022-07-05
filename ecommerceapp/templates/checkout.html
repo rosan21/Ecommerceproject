@@ -1,0 +1,56 @@
+{%extends 'core/base.html'%}
+{%load custom_price_tag%}
+{%load crispy_forms_tags%}
+
+{%block title%}{%endblock title%}
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h1 class="display-4">Cart Details</h1>
+            <hr>
+            <a href="{%url 'mycart'%}" class="btn btn-info">Back To Cart</a>
+            <hr>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>SN</td>
+                        <td>Product</td>
+                        <td>Rate</td>
+                        <td>Quantity</td>
+                        <td>Subtotal</td>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {%for c in cart.cartproduct_set.all%}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{c.product.title}}</td>
+                        <td>{{c.rate}}</td>
+                        <td>{{c.quantity}}</td>
+                        <td>{{c.subtotal}}</td>
+                    {%endfor%}
+                    </tr>
+                    <tr>
+                        <th colspan="4" class="text-right">Total</th>
+                        <th>{{cart.total|rupees}}</th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="com-md-6">
+            <h1 class="display-4">Checkout Form</h1>
+            <hr>
+            <div class="container">
+                <form method="POST">
+                    {%csrf_token%}
+                    {{form|crispy}}
+                    <input type="Submit" class="btn btn-success">
+                </form>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{%endblock content%}

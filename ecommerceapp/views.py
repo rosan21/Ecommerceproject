@@ -1,6 +1,8 @@
-from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.shortcuts import render,redirect
+from django.urls import reverse_lazy
+from django.views.generic import TemplateView, View,CreateView
 from ecommerceapp.models import Product,Category, Cart, CartProduct
+from .forms import CheckOutForm
 
 
 # Create your views here.
@@ -83,5 +85,60 @@ class MyCartView(TemplateView):
             cart_object =None
         context['cart']=cart_object
 
+
+        return context
+
+class ManageCartView(View):
+    def get(self, request,id, *args, **kwargs):
+        cart_product_object = CartProduct.objects.get(id=id)
+        cart_object = cart_product_object.cart
+        cart_action = request.GET.get('action')
+        if cart_action == 'inc':
+            cart_product_object.quantity+=1
+            cart_product_object.subtotal+=cart_product_object.rate
+            cart_product_object.save()
+            cart_object.total +=cart_product_object.rate
+            cart_object.save()
+        elif cart_action == 'dec':
+            cart_product_object.quantity-=1
+            cart_product_object.subtotal-=cart_product_object.rate
+            cart_product_object.save()
+            cart_object.total -=cart_product_object.rate
+            cart_object.save()
+            if cart_product_object.quantity == 0:
+                cart_product_object.delete()
+        elif cart_action == 'rmv':
+            cart_object.total-= cart_product_object.subtotal
+            cart_object.save()
+            cart_product_object.delete()
+            
+        else:
+            return redirect('mycart')
+
+        return redirect('mycart')
+
+class EmptyCartView(View):
+    def get(self,request, *args, **kwargs):
+        cart_id = request.session.get('cart_id')
+        if cart_id:
+            cart_object = Cart.objects.get(id=cart_id)
+            cart_object.cartproduct_set.all().delete()
+            cart_object.total = 0
+            cart_object.save()
+            return redirect('mycart')
+        return redirect('mycart')
+
+class CheckOutView(CreateView):
+    template_name = 'checkout.html'
+    form_class = CheckOutForm
+    success_url= reverse_lazy('home')
+    
+    
+
+    def get_context_data(self, **kwargs) :
+        context =  super().get_context_data(**kwargs)
+        cart_id = self.request.session.get('cart_id')
+        cart_object = Cart.objects.get(id=cart_id)
+        context['cart'] = cart_object
 
         return context

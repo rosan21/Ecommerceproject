@@ -54,3 +54,30 @@ class CartProduct(models.Model):
 
     def __str__(self):
         return "Cart: " + str(self.cart.id) + " CartProduct: " + str(self.id)
+
+ORDER_STATUS = (
+    ("Order Received", "Order Received"),
+    ("Order Processing", "Order Processing"),
+    ("On the way", "On the way"),
+    ("Order Completed", "Order Completed"),
+    ("Order Canceled", "Order Canceled"),
+)
+
+
+
+
+class Order(models.Model):
+    cart = models.OneToOneField(Cart, on_delete=models.CASCADE)
+    ordered_by = models.CharField(max_length=200)
+    shipping_address = models.CharField(max_length=200)
+    mobile = models.CharField(max_length=10)
+    email = models.EmailField(null=True, blank=True)
+    subtotal = models.PositiveIntegerField()
+    discount = models.PositiveIntegerField()
+    total = models.PositiveIntegerField()
+    order_status = models.CharField(max_length=50, choices=ORDER_STATUS)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+
+    def __str__(self):
+        return "Order: " + str(self.id)
