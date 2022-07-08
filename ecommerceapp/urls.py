@@ -13,6 +13,8 @@ urlpatterns = [
     path('emptycart/', EmptyCartView.as_view(), name = 'emptycart'),
     path('checkout/', CheckOutView.as_view(), name='checkout'),
     path('register/', CustomerRegistrationView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name ='logout')
+    path('login/', CustomerLoginView.as_view(), name='login'),
+    path('logout/', CustomerLogoutView.as_view(), name ='logout'),
+    path('myprofile/', MyProfile.as_view(), name= 'myprofile'),
+    path('oderdetails/<int:id>', OrderDetailsView.as_view(), name = 'orderdetails')
 ]

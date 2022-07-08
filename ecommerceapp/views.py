@@ -1,15 +1,24 @@
 from django.shortcuts import render,redirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, View,CreateView,FormView
+from django.views.generic import TemplateView, View,CreateView,FormView, DetailView
 from ecommerceapp.models import Product,Category, Cart, CartProduct, Order,Customer
 from .forms import CheckOutForm, RegistrationForm, LoginForm,CustomerRegistrationForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 
+class EcomMixin(object):
+    def dispatch(self,request,*args, **kwargs):
+        cart_id = request.session.get('cart_id')
+        if cart_id:
+            cart_object = Cart.objects.get(id=cart_id)
+            if request.user.is_authenticated and request.user.customer:
+                cart_object.customer = request.user.customer
+                cart_object.save()
+        return super().dispatch(request,*args,**kwargs)
 
 # Create your views here.
-class HomeView(TemplateView):
+class HomeView(EcomMixin,TemplateView):
     template_name = 'home.html'
 
     def get_context_data(self, **kwargs):
@@ -17,7 +26,7 @@ class HomeView(TemplateView):
          context['products'] = Product.objects.all()
          return context
 
-class CategoriesView(TemplateView):
+class CategoriesView(EcomMixin,TemplateView):
     template_name = 'categories.html'
 
     def get_context_data(self, **kwargs):
@@ -25,7 +34,7 @@ class CategoriesView(TemplateView):
         context['categories'] = Category.objects.all()
         return context
 
-class ProductDetailView(TemplateView):
+class ProductDetailView(EcomMixin,TemplateView):
     template_name = 'productdetail.html'
 
     def get_context_data(self, **kwargs):
@@ -37,7 +46,7 @@ class ProductDetailView(TemplateView):
         context['product'] = product
         return context
 
-class AddToCartView(TemplateView):
+class AddToCartView(EcomMixin, TemplateView):
     template_name = 'addtocart.html'
 
     def get_context_data(self, **kwargs):
@@ -73,8 +82,10 @@ class AddToCartView(TemplateView):
 
         return context
 
-class MyCartView(TemplateView):
+class MyCartView(EcomMixin, TemplateView):
     template_name ='mycart.html'
+
+    
 
     def get_context_data(self, **kwargs):
         context =  super().get_context_data(**kwargs)
@@ -87,7 +98,7 @@ class MyCartView(TemplateView):
         context['cart']=cart_object
         return context
 
-class ManageCartView(View):
+class ManageCartView(EcomMixin, View):
     def get(self, request,id, *args, **kwargs):
         cart_product_object = CartProduct.objects.get(id=id)
         cart_object = cart_product_object.cart
@@ -116,7 +127,7 @@ class ManageCartView(View):
 
         return redirect('mycart')
 
-class EmptyCartView(View):
+class EmptyCartView(EcomMixin, View):
     def get(self,request, *args, **kwargs):
         cart_id = request.session.get('cart_id')
         if cart_id:
@@ -127,10 +138,19 @@ class EmptyCartView(View):
             return redirect('mycart')
         return redirect('mycart')
 
-class CheckOutView(CreateView):
+class CheckOutView(EcomMixin, CreateView):
     template_name = 'checkout.html'
     form_class = CheckOutForm
     success_url= reverse_lazy('home')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.customer:
+            pass
+        else:
+            return redirect('/login/?next=/checkout/')
+
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs) :
         context =  super().get_context_data(**kwargs)
@@ -183,30 +203,9 @@ class CustomerRegistrationView(View):
         return render(request,'register.html', context)
 
 
-# class LoginView(FormView):
-#     template_name='login.html'
-#     form_class = LoginForm
-#     success_url= reverse_lazy('home')
-
-#     def form_valid(self, form):
-#         uname =form.cleaned_data['username']
-#         passs = form.cleaned_data['password']
-#         usr = authenticate(username=uname, password=passs)
-#         customer = Customer.objects.get(user=usr)
-#         print(customer )
-#         if usr is not None:
-#             print(uname,passs)
-#             login(self.request, usr )
-            
-#         else:
-#             print('incorrect')
-#             return render(self.request,self.template_name, {'error': 'Invalid Crediantials', 'form':self.form_class})
-
-
-
-#         return super().form_valid(form)
-
-class LoginView(View):
+class CustomerLoginView(View):
+    template_name = 'login.html'
+    
     def get(self,request):
         form = LoginForm()
         context = {'form':form}
@@ -218,19 +217,67 @@ class LoginView(View):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(username = username, password=password)
-            print(user)
             if user is not None and Customer.objects.filter(user=user).exists():
                 login(request,user)
-                return redirect('home')
+                if "next" in self.request.GET:
+                    next_url = self.request.GET.get('next') 
+                    return redirect(next_url)
+                else:
+                    return redirect('home')
             else:
                 return render(request, 'login.html', context)
         else:
              return render(request, 'login.html', context)
+    
+    
 
-class LogoutView(View):
+
+class CustomerLogoutView(View):
 
     def get(self,request):
         logout(request)
         return redirect("home")
 
+class MyProfile(TemplateView):
+    template_name= 'myprofile.html'
+
+    def dispatch(self, request, *args, **kwargs) :
+        if request.user.is_authenticated and request.user.customer:
+            pass
+        else:
+            return redirect('/login/?next=/myprofile/') 
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        customer = self.request.user.customer
+        context['customer'] = customer
+        orders = Order.objects.filter(cart__customer=customer)
+        context['orders'] = orders
+        return context
+
+class OrderDetailsView(DetailView):
+    model = Order
+    context_object_name = "ord_obj"
+    template_name= 'orderdetails.html'
+    pk_url_kwarg ='id'
+
+    def dispatch(self, request, *args, **kwargs) :
+        if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
+            order_id = self.kwargs['id']
+            order = Order.objects.get(id=order_id)
+            if request.user.customer != order.cart.customer:
+                return redirect('home')
+            else:
+                pass
+        else:
+            order_id = self.kwargs['id']
+            return redirect(f"/login/?next=/oderdetails/{order_id}")
+
+        
+        
+        return super().dispatch(request, *args, **kwargs)
+
+
+        
 
