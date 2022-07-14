@@ -6,6 +6,7 @@ from .forms import CheckOutForm, RegistrationForm, LoginForm,CustomerRegistratio
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from .models import Admin
 
 class EcomMixin(object):
     def dispatch(self,request,*args, **kwargs):
@@ -279,5 +280,65 @@ class OrderDetailsView(DetailView):
         return super().dispatch(request, *args, **kwargs)
 
 
-        
+class AdminMixin(object):
+    def dispatch(self,request, *args,**kwargs):
+        if request.user.is_authenticated and Admin.objects.filter(user=request.user).exists():
+            pass
+        else:
+            return redirect("/adminlogin/")
+        return super().dispatch(request, *args, **kwargs)
 
+class AdminLoginView(FormView):
+    template_name = 'admin/adminlogin.html'
+       
+    def get(self,request):
+        form = LoginForm()
+        context = {'form':form}
+        return render(request,'admin/adminlogin.html', context)
+    def post(self,request):
+        form = LoginForm(request.POST)
+        context = {'form':form, 'error':'Invalid Credentials'}
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(username = username, password=password)
+            if user is not None and Admin.objects.filter(user=user).exists():
+                login(request,user)
+                if "next" in self.request.GET:
+                    next_url = self.request.GET.get('next') 
+                    return redirect(next_url)
+                else:
+                    return redirect('adminhome')
+            else:
+                return render(request, 'admin/adminlogin.html', context)
+        else:
+             return render(request, 'admin/adminlogin.html', context)
+
+
+class AdminHomeView(AdminMixin, TemplateView):
+    template_name = 'admin/adminhomepage.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pendingorders"] = Order.objects.filter(
+            order_status="Order Received").order_by("-id")
+        return context
+
+ORDER_STATUS = (
+    ("Order Received", "Order Received"),
+    ("Order Processing", "Order Processing"),
+    ("On the way", "On the way"),
+    ("Order Completed", "Order Completed"),
+    ("Order Canceled", "Order Canceled"),
+)
+
+class AdminOrderDetailView(DetailView):
+    template_name = 'admin/adminorderdetail.html'
+    model = Order
+    context_object_name = "ord_obj"
+    pk_url_kwarg ='id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["allstatus"] = ORDER_STATUS
+        return context

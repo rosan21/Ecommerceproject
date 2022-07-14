@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer,Cart,CartProduct,Category,Product,Order
+from .models import Customer,Cart,CartProduct,Category,Product,Order, Admin
 
 # Register your models here.
 
@@ -13,6 +13,6 @@ class CartAdmin(admin.ModelAdmin):
     
     inlines=[CartProductAdmin,OrderAdmin]
 
-admin.site.register([Customer,Category,Product])
+admin.site.register([Customer,Category,Product, Admin])
 
 admin.site.register(Cart,CartAdmin)

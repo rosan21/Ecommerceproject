@@ -16,5 +16,8 @@ urlpatterns = [
     path('login/', CustomerLoginView.as_view(), name='login'),
     path('logout/', CustomerLogoutView.as_view(), name ='logout'),
     path('myprofile/', MyProfile.as_view(), name= 'myprofile'),
-    path('oderdetails/<int:id>', OrderDetailsView.as_view(), name = 'orderdetails')
+    path('oderdetails/<int:id>', OrderDetailsView.as_view(), name = 'orderdetails'),
+    path('adminlogin/', AdminLoginView.as_view(), name = 'adminlogin'),
+    path('adminhome/', AdminHomeView.as_view(), name = 'adminhome'),
+    path('adminorderdetails/<int:id>', AdminOrderDetailView.as_view(), name ='adminorderdetail')
 ]

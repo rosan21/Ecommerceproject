@@ -12,6 +12,16 @@ class Customer(models.Model):
         return self.full_name
 
 
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=50)
+    image = models.ImageField(upload_to="admins")
+    mobile = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.user.username
+
+
 class Category(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
